@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>國語生字練習</title>
 <meta name="description" content="康軒版國小一到六年級國語生字：選擇年級與課次，查看生字注音、出聽寫題目。">
+<link rel="icon" href="logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Iansui&family=Noto+Sans+TC:wght@400;500;700&display=swap">
@@ -58,6 +59,10 @@ header{display:grid;gap:8px}
 .toprow a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line)}
 .toprow a:hover{color:var(--ink);border-color:var(--ink)}
 .lede{color:var(--dim)}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{height:76px;width:auto;flex:none}
+.brand-text{flex:1;min-width:0;display:grid;gap:2px}
+.brand .theme{align-self:flex-start}
 button{font:inherit;color:inherit;cursor:pointer}
 .theme{background:none;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;color:var(--dim)}
 .modes{display:flex;gap:8px;flex-wrap:wrap}
@@ -117,6 +122,8 @@ footer{color:var(--dim);font-size:13px;display:flex;flex-wrap:wrap;gap:6px 16px}
 footer a{color:inherit}
 @media (max-width:480px){
   h1{font-size:25px}
+  .logo{height:60px}
+  .brand{gap:10px}
   .lessons{grid-template-columns:1fr 1fr}
   .lesson{padding:8px;gap:8px}
   .num{width:28px;height:28px;font-size:13px}
@@ -133,12 +140,14 @@ footer a{color:inherit}
 <body>
 <div class="wrap">
   <header>
-    <div class="toprow">
-      <span></span>
+    <div class="brand">
+      <img class="logo" src="logo.png" alt="" width="214" height="281">
+      <div class="brand-text">
+        <h1>國語生字練習</h1>
+        <p class="lede" id="lede">載入中…</p>
+      </div>
       <button class="theme" id="theme" type="button">深色／淺色</button>
     </div>
-    <h1>國語生字練習</h1>
-    <p class="lede" id="lede">載入中…</p>
   </header>
 
   <nav class="modes" role="tablist" aria-label="模式">
