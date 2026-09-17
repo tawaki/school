@@ -1,0 +1,21 @@
+# 國語生字練習（康軒版 二年級上學期）
+
+網頁：<https://tawaki.github.io/school/mandarin/>
+
+- 生字表：選課次（可多選），顯示生字與注音。
+- 聽寫出題：從一年級到所選課次學過的生字組成不重複的詞語／短句，每題至少包含一個所選課次的新字，附注音給家長念。
+
+## 資料來源
+- 教育部 教育雲「生字詞彙表」<https://pedia.cloud.edu.tw/>：各課生字、語詞、例句。
+- 教育部《國語辭典簡編本》，採「創用CC 姓名標示-禁止改作 3.0 臺灣」授權：注音、例句。
+
+資料由教育部整理，不是課本原件；注音是依詞語推得，破音字可能與課本不同。
+
+## 重建資料
+```
+python3 fetch_pedia.py 115_1 2 康軒版 kh_g2_115_1.json   # 各冊課次
+python3 fetch_vocab.py                                   # 一到六年級各版本語詞 -> vocab_raw.jsonl
+python3 src/xlsx2json.py <dict_concised_*.xlsx> src/concised_rows.json
+python3 build_dictation.py                               # -> dictation_pool.json, char_zhuyin.json
+```
+簡編本 xlsx 從 <https://language.moe.gov.tw/001/Upload/Files/site_content/M0001/respub/dict_concised_download.html> 下載。

@@ -1,0 +1,460 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>國語生字練習</title>
+<meta name="description" content="康軒版國小二年級上學期國語生字：選擇課次，查看生字、出聽寫題目。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Iansui&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ground:#f6f3ec;
+  --panel:#fffdf8;
+  --ink:#22201c;
+  --dim:#6b665c;
+  --line:#e2dccf;
+  --tile:#ffffff;
+  --accent:#c2462e;
+  --accent-soft:#f7e3dc;
+  --grid:#e8b8ab;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#15130f;
+    --panel:#1e1b16;
+    --ink:#efe9de;
+    --dim:#a39c8f;
+    --line:#353027;
+    --tile:#110f0c;
+    --accent:#f08a6e;
+    --accent-soft:#3a2219;
+    --grid:#5a3226;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#15130f;
+  --panel:#1e1b16;
+  --ink:#efe9de;
+  --dim:#a39c8f;
+  --line:#353027;
+  --tile:#110f0c;
+  --accent:#f08a6e;
+  --accent-soft:#3a2219;
+  --grid:#5a3226;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);margin:0;font:16px/1.6 "Noto Sans TC",system-ui,sans-serif;padding:0 16px}
+.wrap{max-width:980px;margin:0 auto;padding-block:32px 48px;display:grid;gap:20px}
+h1,h2{margin:0;text-wrap:balance}
+h1{font-size:30px;font-weight:700;line-height:1.25}
+h2{font-size:18px;font-weight:700}
+p{margin:0}
+[hidden]{display:none!important}
+header{display:grid;gap:8px}
+.toprow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 16px;color:var(--dim);font-size:13px}
+.toprow a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line)}
+.toprow a:hover{color:var(--ink);border-color:var(--ink)}
+.lede{color:var(--dim)}
+button{font:inherit;color:inherit;cursor:pointer}
+.theme{background:none;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;color:var(--dim)}
+.modes{display:flex;gap:8px;flex-wrap:wrap}
+.mode{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 16px;font-weight:500}
+.mode[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px}
+.boxhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.small{background:none;border:1px solid var(--line);border-radius:8px;padding:4px 12px;font-size:14px;color:var(--dim)}
+.small:hover{color:var(--ink);border-color:var(--ink)}
+.primary{background:var(--accent);border:1px solid var(--accent);color:#fff;border-radius:8px;padding:6px 16px;font-weight:500}
+.lessons{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.lesson{display:flex;align-items:center;gap:10px;text-align:left;background:var(--tile);border:2px solid var(--line);border-radius:10px;padding:10px 12px;min-height:56px;transition:border-color .15s,background .15s}
+.lesson:hover{border-color:var(--accent)}
+.lesson:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lesson[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.num{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;border:2px solid var(--line);color:var(--dim)}
+.lesson[aria-pressed="true"] .num{background:var(--accent);border-color:var(--accent);color:#fff}
+.lname{font-size:15px;line-height:1.35}
+.summary{color:var(--dim)}
+.summary b{color:var(--accent);font-size:20px}
+.empty{color:var(--dim);text-align:center;padding:28px 0}
+.group{display:grid;gap:10px}
+.group + .group{border-top:1px dashed var(--line);padding-top:16px}
+.gtitle{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.gtitle span{color:var(--dim);font-size:14px}
+.chars{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.char{display:grid;place-items:center;background:var(--tile);border:1px solid var(--line);border-radius:8px;padding:10px 4px}
+.char-in{display:inline-flex;align-items:center}
+.char .hzbox{width:62px;height:62px;display:grid;place-items:center;border:1px solid var(--grid);font:400 46px/1 "TW-Kai","BiauKai","DFKai-SB","Kaiti TC","Iansui",serif;
+  background-image:linear-gradient(var(--grid),var(--grid)),linear-gradient(var(--grid),var(--grid));
+  background-size:100% 1px,1px 100%;background-position:center;background-repeat:no-repeat}
+.char .zy{font-size:14px;color:var(--ink);padding-left:3px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+.ctl{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:var(--tile);border:0;padding:4px 12px;font-size:14px}
+.seg button + button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.info{color:var(--dim);font-size:14px;display:grid;gap:4px}
+.info .miss{color:var(--accent)}
+.quiz{list-style:none;margin:0;padding:0;display:grid;gap:8px;counter-reset:q}
+.quiz li{counter-increment:q;display:flex;align-items:center;gap:12px;background:var(--tile);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.quiz li::before{content:counter(q);flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:14px}
+.quiz li.note{display:block;background:none;border:0;color:var(--dim);text-align:center;padding:20px 0;counter-increment:none}
+.quiz li.note::before{content:none}
+.qtext{flex:1;font:400 28px/1.35 "TW-Kai","BiauKai","DFKai-SB","Kaiti TC","Iansui",serif;word-break:break-all}
+.qtext{display:flex;flex-wrap:wrap;align-items:center;row-gap:6px}
+.cell{display:inline-flex;align-items:center;margin-right:3px}
+.cell.target .hz{color:var(--accent);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px}
+.zy{position:relative;display:inline-flex;flex-direction:column;justify-content:center;font:400 13px/1.05 "Noto Sans TC",system-ui,sans-serif;color:var(--dim);padding:0 6px 0 1px;min-height:2.6em}
+.zy .tone{position:absolute;right:0;bottom:calc(50% - 1.3em)}
+.zy .light{position:absolute;left:1px;right:6px;text-align:center;top:calc(50% - 2.9em)}
+.tag{flex:none;font-size:12px;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:0 8px}
+.swap{flex:none}
+footer{color:var(--dim);font-size:13px;display:flex;flex-wrap:wrap;gap:6px 16px}
+footer a{color:inherit}
+@media (max-width:480px){
+  h1{font-size:25px}
+  .lessons{grid-template-columns:1fr 1fr}
+  .lesson{padding:8px;gap:8px}
+  .num{width:28px;height:28px;font-size:13px}
+  .lname{font-size:14px}
+  .chars{grid-template-columns:repeat(auto-fill,minmax(88px,1fr))}
+  .char .zy{font-size:12px}
+  .char .hzbox{width:54px;height:54px;font-size:40px}
+  .qtext{font-size:24px}
+  .zy{font-size:12px}
+  .tag{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="toprow">
+      <span></span>
+      <button class="theme" id="theme" type="button">深色／淺色</button>
+    </div>
+    <h1>國語生字練習</h1>
+    <p class="lede" id="lede">載入中…</p>
+  </header>
+
+  <nav class="modes" role="tablist" aria-label="模式">
+    <button class="mode" role="tab" data-mode="list" type="button">生字表</button>
+    <button class="mode" role="tab" data-mode="dictation" type="button">聽寫出題</button>
+  </nav>
+
+  <section class="box">
+    <div class="boxhead">
+      <h2>選擇課次（可多選）</h2>
+      <div class="actions">
+        <button class="small" id="all" type="button">全選</button>
+        <button class="small" id="none" type="button">清除</button>
+      </div>
+    </div>
+    <div class="lessons" id="lessons"></div>
+  </section>
+
+  <section class="box" id="view-list">
+    <div class="boxhead">
+      <h2>生字</h2>
+      <p class="summary" id="summary"></p>
+    </div>
+    <div id="result"></div>
+  </section>
+
+  <section class="box" id="view-dictation" hidden>
+    <div class="boxhead">
+      <h2>聽寫題目</h2>
+      <button class="primary" id="regen" type="button">重新出題</button>
+    </div>
+    <div class="controls">
+      <div class="ctl">題數 <span class="seg" id="seg-n"></span></div>
+      <div class="ctl">題型 <span class="seg" id="seg-kind"></span></div>
+    </div>
+    <div class="info" id="dinfo"></div>
+    <ol class="quiz" id="quiz"></ol>
+  </section>
+
+  <footer><span>資料來源：教育部教育雲・生字詞彙表；教育部《國語辭典簡編本》（CC BY-ND 3.0 TW）</span></footer>
+</div>
+
+<script>
+const G2_URL = "kh_g2_115_1.json";
+const PRIOR_URLS = ["kh_g1_114_1.json", "kh_g1_114_2.json"];
+const POOL_URL = "dictation_pool.json";
+const CHAR_ZY_URL = "char_zhuyin.json";
+const STORE_KEY = "hanzi.selected";
+const $ = id => document.getElementById(id);
+let lessons = [], priorChars = new Set(), pool = [], charZy = {};
+let selected = new Set();
+let mode = "list";
+const opts = {n: 10, kind: "mix"};
+let quiz = [], seen = new Set();
+
+function splitTitle(t) {
+  const m = t.match(/^(第.+?課)[：:](.*)$/);
+  return m ? {label: m[1], name: m[2]} : {label: "", name: t};
+}
+function cnNum(s) {
+  const d = {"一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9};
+  const core = s.replace(/^第|課$/g, "");
+  if (core === "十") return 10;
+  if (core.startsWith("十")) return 10 + d[core[1]];
+  if (core.includes("十")) return d[core[0]] * 10 + (d[core[2]] || 0);
+  return d[core] || "";
+}
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify([...selected])); } catch (e) {}
+}
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); } catch (e) { return []; }
+}
+function update() { save(); mode === "list" ? renderResult() : newQuiz(); }
+
+function renderLessons() {
+  $("lessons").innerHTML = "";
+  lessons.forEach((l, i) => {
+    const {label, name} = splitTitle(l.title);
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "lesson";
+    b.setAttribute("aria-pressed", selected.has(l.id));
+    b.title = l.title;
+    b.innerHTML = `<span class="num">${cnNum(label) || i + 1}</span><span class="lname">${name}</span>`;
+    b.onclick = () => {
+      selected.has(l.id) ? selected.delete(l.id) : selected.add(l.id);
+      b.setAttribute("aria-pressed", selected.has(l.id));
+      update();
+    };
+    $("lessons").appendChild(b);
+  });
+}
+
+function renderResult() {
+  const chosen = lessons.filter(l => selected.has(l.id));
+  const box = $("result");
+  box.innerHTML = "";
+  if (!chosen.length) {
+    $("summary").textContent = "";
+    box.innerHTML = '<p class="empty">請在上面點選課次</p>';
+    return;
+  }
+  const total = chosen.reduce((n, l) => n + l.生字.length, 0);
+  $("summary").innerHTML = `${chosen.length} 課，共 <b>${total}</b> 個生字`;
+  for (const l of chosen) {
+    const g = document.createElement("div");
+    g.className = "group";
+    g.innerHTML = `<div class="gtitle"><h2>${l.title}</h2><span>${l.生字.length} 個生字</span></div>`;
+    const grid = document.createElement("div");
+    grid.className = "chars";
+    for (const c of l.生字) {
+      const d = document.createElement("div");
+      d.className = "char";
+      const inner = document.createElement("span");
+      inner.className = "char-in";
+      const box = document.createElement("span");
+      box.className = "hzbox"; box.textContent = c;
+      inner.append(box, zhuyinNode(charZy[l.id]?.[c] || ""));
+      d.appendChild(inner);
+      grid.appendChild(d);
+    }
+    g.appendChild(grid);
+    box.appendChild(g);
+  }
+}
+
+/* ---------- 聽寫出題 ---------- */
+const PUNCT = /[，。！？、]/g;
+const hanzi = t => t.replace(PUNCT, "");
+
+// 可用字 = 一年級全部生字 + 二年級第一課到所選最後一課的生字；新字 = 所選課的生字
+function scope() {
+  const idx = lessons.map((l, i) => selected.has(l.id) ? i : -1).filter(i => i >= 0);
+  const last = Math.max(...idx);
+  const allowed = new Set(priorChars);
+  lessons.slice(0, last + 1).forEach(l => l.生字.forEach(c => allowed.add(c)));
+  const targets = new Set(idx.flatMap(i => lessons[i].生字));
+  return {allowed, targets, last};
+}
+
+function candidates(sc) {
+  return pool.filter(it => {
+    if (opts.kind !== "mix" && it.k !== opts.kind) return false;
+    let hit = false;
+    for (const c of it.h) {
+      if (!sc.allowed.has(c)) return false;
+      if (sc.targets.has(c)) hit = true;
+    }
+    return hit;
+  });
+}
+
+// 不和已選題目重複：文字相同、互相包含都算重複
+const clash = (a, list) => list.some(b => b.h.includes(a.h) || a.h.includes(b.h));
+
+function pickOne(cands, chosen, sc, wantKind) {
+  const used = new Map();
+  chosen.forEach(it => new Set(it.h).forEach(c => sc.targets.has(c) && used.set(c, (used.get(c) || 0) + 1)));
+  let best = null, bestScore = -Infinity;
+  for (const it of cands) {
+    if (seen.has(it.t) || clash(it, chosen)) continue;
+    let score = it.q * 2 + Math.random() * 3;
+    for (const c of new Set(it.h)) if (sc.targets.has(c)) score += used.get(c) ? -1.5 * used.get(c) : 8;
+    if (wantKind && it.k !== wantKind) score -= 20;
+    if (score > bestScore) { bestScore = score; best = it; }
+  }
+  return best;
+}
+
+// 混合題型：每 5 題有 2 句短句
+const kindAt = i => opts.kind !== "mix" ? null : (i % 5 === 1 || i % 5 === 3) ? "s" : "w";
+
+function newQuiz() {
+  quiz = []; seen = new Set();
+  if (selected.size) {
+    const sc = scope(), cands = candidates(sc);
+    for (let i = 0; i < opts.n; i++) {
+      const it = pickOne(cands, quiz, sc, kindAt(i));
+      if (!it) break;
+      quiz.push(it); seen.add(it.t);
+    }
+  }
+  renderQuiz();
+}
+
+function swap(i) {
+  const sc = scope(), cands = candidates(sc);
+  const others = quiz.filter((_, j) => j !== i);
+  let it = pickOne(cands, others, sc, quiz[i].k);
+  if (!it) {  // 換完一輪了：清掉換過的紀錄再找
+    seen = new Set(quiz.map(q => q.t));
+    it = pickOne(cands, others, sc, quiz[i].k);
+  }
+  if (!it) return;
+  quiz[i] = it; seen.add(it.t);
+  renderQuiz();
+}
+
+// 注音直排在字的右邊：聲調符號在右下，輕聲點在上方
+function zhuyinNode(syl) {
+  const box = document.createElement("span");
+  box.className = "zy";
+  for (const ch of syl) {
+    const x = document.createElement("span");
+    if (ch === "˙") x.className = "light";
+    else if ("ˊˇˋ".includes(ch)) x.className = "tone";
+    x.textContent = ch;
+    box.appendChild(x);
+  }
+  return box;
+}
+
+function note(ol, text) {
+  const li = document.createElement("li");
+  li.className = "note"; li.textContent = text;
+  ol.appendChild(li);
+}
+
+function renderQuiz() {
+  const ol = $("quiz"), info = $("dinfo");
+  ol.innerHTML = ""; info.innerHTML = "";
+  if (!selected.size) { note(ol, "請在上面點選課次"); return; }
+  const sc = scope();
+  const covered = new Set(quiz.flatMap(it => [...it.h].filter(c => sc.targets.has(c))));
+  const missing = [...sc.targets].filter(c => !covered.has(c));
+  const noCand = missing.filter(c => !pool.some(it => it.h.includes(c) && [...it.h].every(x => sc.allowed.has(x))));
+  const upto = splitTitle(lessons[sc.last].title).label;
+  const s1 = document.createElement("span");
+  s1.textContent = `用字範圍：一年級全部 ${priorChars.size} 字（含一到十、百）＋二年級第一課到${upto}，共 ${sc.allowed.size} 字。` +
+    `所選課次的新字 ${sc.targets.size} 個，這組題目考到 ${covered.size} 個（標底線的字）。`;
+  info.appendChild(s1);
+  if (missing.length) {
+    const s2 = document.createElement("span");
+    s2.className = "miss";
+    s2.textContent = `這組沒考到：${missing.join("、")}` +
+      (noCand.length ? `（其中 ${noCand.join("、")} 在詞庫裡找不到只用學過的字組成的詞句）` : "");
+    info.appendChild(s2);
+  }
+  if (!quiz.length) { note(ol, "找不到符合的詞句，請換題型或多選幾課"); return; }
+  quiz.forEach((it, i) => {
+    const li = document.createElement("li");
+    const text = document.createElement("span");
+    text.className = "qtext";
+    let k = 0;  // 注音依漢字順序對應，標點沒有注音
+    for (const c of it.t) {
+      const cell = document.createElement("span");
+      cell.className = "cell" + (sc.targets.has(c) ? " target" : "");
+      const hz = document.createElement("span");
+      hz.className = "hz"; hz.textContent = c;
+      cell.appendChild(hz);
+      if (!/[，。！？、]/.test(c)) cell.appendChild(zhuyinNode(it.zy[k++] || ""));
+      text.appendChild(cell);
+    }
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = it.k === "s" ? "短句" : "詞語";
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "small swap"; b.textContent = "換一題";
+    b.onclick = () => swap(i);
+    li.append(text, tag, b);
+    ol.appendChild(li);
+  });
+  if (quiz.length < opts.n) note(ol, `只找到 ${quiz.length} 題不重複的詞句`);
+}
+
+function segment(el, key, choices) {
+  for (const [val, label] of choices) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = label;
+    b.setAttribute("aria-pressed", opts[key] === val);
+    b.onclick = () => {
+      opts[key] = val;
+      [...el.children].forEach(x => x.setAttribute("aria-pressed", x === b));
+      newQuiz();
+    };
+    el.appendChild(b);
+  }
+}
+
+function setMode(m) {
+  mode = m === "dictation" ? "dictation" : "list";
+  document.querySelectorAll(".mode").forEach(b => b.setAttribute("aria-selected", b.dataset.mode === mode));
+  $("view-list").hidden = mode !== "list";
+  $("view-dictation").hidden = mode !== "dictation";
+  history.replaceState(null, "", location.pathname + location.search + (mode === "list" ? "" : "#" + mode));
+  mode === "list" ? renderResult() : newQuiz();
+}
+
+document.querySelectorAll(".mode").forEach(b => b.onclick = () => setMode(b.dataset.mode));
+$("all").onclick = () => { lessons.forEach(l => selected.add(l.id)); renderLessons(); update(); };
+$("none").onclick = () => { selected.clear(); renderLessons(); update(); };
+$("regen").onclick = newQuiz;
+$("theme").onclick = () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+};
+segment($("seg-n"), "n", [[5, "5"], [10, "10"], [15, "15"], [20, "20"]]);
+segment($("seg-kind"), "kind", [["mix", "混合"], ["w", "詞語"], ["s", "短句"]]);
+
+Promise.all([G2_URL, ...PRIOR_URLS, POOL_URL, CHAR_ZY_URL].map(u => fetch(u).then(r => r.json()))).then(([g2, ...rest]) => {
+  charZy = rest.pop();
+  const p = rest.pop();
+  rest.forEach(d => d.lessons.forEach(l => l.生字.forEach(c => priorChars.add(c))));
+  for (const c of p.extra_known || "") priorChars.add(c);
+  pool = p.items.map(([t, k, q, zy]) => ({t, k, q, h: hanzi(t), zy: zy.split(" ")}));
+  lessons = g2.lessons;
+  $("lede").textContent = `${g2.press}・${g2.grade} 年級・${g2.year}`;
+  const ids = new Set(lessons.map(l => l.id));
+  const q = new URLSearchParams(location.search).get("l");
+  const fromUrl = q ? q.split(",").map(n => lessons[+n - 1]?.id).filter(Boolean) : null;
+  selected = new Set((fromUrl || load()).filter(id => ids.has(id)));
+  renderLessons();
+  setMode(location.hash.slice(1));
+}).catch(() => { $("lede").textContent = "資料載入失敗"; });
+</script>
+</body>
+</html>
