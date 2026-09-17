@@ -191,7 +191,7 @@ footer a{color:inherit}
     <ol class="quiz" id="quiz"></ol>
   </section>
 
-  <footer><a id="report" href="https://forms.gle/GBex1gHRLynzHtuT8" target="_blank" rel="noopener">回報問題</a><span>資料來源：教育部教育雲・生字詞彙表；教育部《國語辭典簡編本》（CC BY-ND 3.0 TW）</span></footer>
+  <footer><a id="report" href="https://forms.gle/GBex1gHRLynzHtuT8" target="_blank" rel="noopener">回報問題</a><span>資料來源：教育部教育雲・生字詞彙表；教育部《國語辭典簡編本》、《成語典》（CC BY-ND 3.0 TW）</span></footer>
 </div>
 
 <script>
@@ -348,8 +348,8 @@ function pickOne(cands, chosen, sc, wantKind) {
   return best;
 }
 
-// 混合題型：每 5 題有 2 句短句
-const kindAt = i => opts.kind !== "mix" ? null : (i % 5 === 1 || i % 5 === 3) ? "s" : "w";
+// 混合題型：每 5 題有 2 個詞語、2 句短句、1 個成語（學過的字組不出成語時用詞語補）
+const kindAt = i => opts.kind !== "mix" ? null : ["w", "s", "w", "s", "i"][i % 5];
 
 function newQuiz() {
   quiz = []; seen = new Set();
@@ -419,7 +419,7 @@ function renderQuiz() {
     }
     const tag = document.createElement("span");
     tag.className = "tag";
-    tag.textContent = it.k === "s" ? "短句" : "詞語";
+    tag.textContent = {s: "短句", i: "成語"}[it.k] || "詞語";
     const b = document.createElement("button");
     b.type = "button"; b.className = "small swap"; b.textContent = "換一題";
     b.onclick = () => swap(i);
@@ -474,7 +474,7 @@ $("theme").onclick = () => {
   root.dataset.theme = dark ? "light" : "dark";
 };
 segment($("seg-n"), "n", [[5, "5"], [10, "10"], [15, "15"], [20, "20"]], v => { opts.n = v; syncSeg($("seg-n"), v); newQuiz(); });
-segment($("seg-kind"), "kind", [["mix", "混合"], ["w", "詞語"], ["s", "短句"]], v => { opts.kind = v; syncSeg($("seg-kind"), v); newQuiz(); });
+segment($("seg-kind"), "kind", [["mix", "混合"], ["w", "詞語"], ["s", "短句"], ["i", "成語"]], v => { opts.kind = v; syncSeg($("seg-kind"), v); newQuiz(); });
 
 Promise.all([LESSONS_URL, POOL_URL].map(u => fetch(u).then(r => r.json()))).then(([d, p]) => {
   data = d;

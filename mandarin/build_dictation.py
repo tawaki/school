@@ -5,12 +5,13 @@ Sources
   vocab_raw.jsonl (fetch_vocab.py): 生字/語詞 of grades 1-6, all presses, years 114_1 114_2 115_1,
       with descriptions ("如：「…」" words, "[例]" sentences).
   src/concised_rows.json (src/xlsx2json.py of 教育部《國語辭典簡編本》): 注音 and "[例]" sentences.
+  src/idioms_rows.json (src/xlsx2json.py of 教育部《成語典》): 主條成語, their 注音 and 用法例句.
 
 lessons.json: volumes 一上 … 六下 (康軒, newest year on 教育雲: 上=115_1, 下=114_2), each lesson with 生字 and
   the 注音 taught in that lesson (best guess, see char_reading), plus first[字] = global lesson index where the
   character is first taught.
 dictation_pool.json items = [text, kind, quality, 注音, level, grade]
-  kind w=詞語 s=短句; quality 3 課本語詞 2 課本例句/字典例詞 1 辭典例句;
+  kind w=詞語 s=短句 i=成語; quality 3 課本語詞 2 課本例句/字典例詞/成語典 1 辭典例句;
   level = global lesson index after which every character is known; grade = textbook grade of the source (0 = 辭典).
 """
 import json, re
@@ -69,6 +70,10 @@ DANGLING = re.compile(r"^(就|但|而|卻|也|才|還|又|並|所以|因此|可�
 def sentences(desc):
     """[例] 裡的整句（4-14 字），以及長句中用逗號切出的分句（5-10 字）。"""
     for block in re.findall(r"\[例\]([^\[]*)", desc):
+        yield from split_sentences(block)
+
+
+def split_sentences(block):
         for s in re.findall(r"[^。！？]+[。！？]", block):
             s = s.strip("｜| ")
             if "「" in s or "『" in s or "、" in s:
@@ -93,6 +98,28 @@ for lesson in raw:
             add(s, "s", 2, g)
 
 concised = json.load(open("src/concised_rows.json"))[1:]
+
+# ---------- 成語：教育部《成語典》主條成語，注音直接用成語典 ----------
+textbook_words = {}
+for lesson in raw:
+    for kind, word, _ in lesson["rows"]:
+        if kind == "語詞":
+            textbook_words.setdefault(word, lesson["grade"])
+idiom_zy = {}
+for row in json.load(open("src/idioms_rows.json"))[1:]:
+    word = row[1].strip()
+    if len(row) < 22 or row[21] != "主條成語" or len(word) < 4:
+        continue
+    syl = [x for x in row[2].split("（變）")[0].split("\u3000") if x.strip()]
+    if len(syl) == len(word):
+        idiom_zy[word] = " ".join(syl)
+        add(word, "i", 3 if word in textbook_words else 2, textbook_words.get(word, 0))
+        for line in row[13].replace("_x000D_", "").split("\n"):
+            for sent in split_sentences(line.strip()):
+                add(sent, "s", 2, 0)
+for word in idiom_zy:
+    if word in items:
+        items[word][0] = "i"
 for row in concised:
     if len(row) > 13:
         for s in sentences(row[13]):
@@ -154,7 +181,7 @@ def zhuyin(text):
 
 pool = []
 for t, (k, q, g) in sorted(items.items(), key=lambda x: (level(x[0]), x[1][0], -x[1][1], x[0])):
-    zy = zhuyin(t)
+    zy = idiom_zy.get(t) or zhuyin(t)
     if zy:
         pool.append([t, k, q, zy, level(t), g])
 
@@ -203,9 +230,10 @@ for vol in volumes:
         del lesson["語詞"]
 json.dump(char_src, open("char_zhuyin_src.json", "w"), ensure_ascii=False, indent=1)
 
-SOURCE = "教育部 教育雲 生字詞彙表；教育部《國語辭典簡編本》(CC BY-ND 3.0 TW)"
+SOURCE = "教育部 教育雲 生字詞彙表；教育部《國語辭典簡編本》、《成語典》(CC BY-ND 3.0 TW)"
 json.dump({"source": SOURCE, "press": PRESS, "extra_known": EXTRA_KNOWN, "volumes": volumes,
            "first": first}, open("lessons.json", "w"), ensure_ascii=False, separators=(",", ":"))
 json.dump({"source": SOURCE, "items": pool}, open("dictation_pool.json", "w"), ensure_ascii=False, separators=(",", ":"))
 print(order, "lessons;", len(first), "chars;", sum(p[1] == "w" for p in pool), "words;",
+      sum(p[1] == "i" for p in pool), "idioms;",
       sum(p[1] == "s" for p in pool), "sentences")
