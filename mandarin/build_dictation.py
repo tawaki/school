@@ -112,6 +112,9 @@ for row in concised:
 SINGLE = {"了": "˙ㄌㄜ", "著": "˙ㄓㄜ", "得": "˙ㄉㄜ", "的": "˙ㄉㄜ", "們": "˙ㄇㄣ",
           "呢": "˙ㄋㄜ", "吧": "˙ㄅㄚ", "嗎": "˙ㄇㄚ", "啊": "˙ㄚ",
           "沒": "ㄇㄟˊ", "還": "ㄏㄞˊ", "都": "ㄉㄡ", "給": "ㄍㄟˇ", "那": "ㄋㄚˋ"}
+# 「得」前面是人稱或副詞時表示「必須」，讀ㄉㄟˇ（你得、我們得、還得、就得）
+MUST_BEFORE = set("你我他她它們咱就還都也總只非又再才")
+MUST_NOT_AFTER = set("到以第出知分獎了")  # 得到、得以、得第一：讀ㄉㄜˊ
 MAXLEN = max(map(len, readings))
 
 
@@ -134,7 +137,11 @@ def zhuyin(text):
     out = []
     for w in reversed(segs):
         pos = len(out)
-        if len(w) == 1 and w in SINGLE:
+        if w == "得" and pos >= 1 and s[pos - 1] in MUST_BEFORE and s[pos + 1:pos + 2] not in MUST_NOT_AFTER:
+            out.append("ㄉㄟˇ")  # 你得加快、還得去：「必須」
+        elif w == "得" and s[pos + 1:pos + 2] in MUST_NOT_AFTER:
+            out.append("ㄉㄜˊ")  # 得到、得以、得第一
+        elif len(w) == 1 and w in SINGLE:
             out.append(SINGLE[w])
         elif w == "長" and s[pos + 1:pos + 2] in ("得", "大", "高"):
             out.append("ㄓㄤˇ")  # 長得、長大、長高

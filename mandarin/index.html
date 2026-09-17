@@ -182,7 +182,7 @@ footer a{color:inherit}
     <ol class="quiz" id="quiz"></ol>
   </section>
 
-  <footer><span>資料來源：教育部教育雲・生字詞彙表；教育部《國語辭典簡編本》（CC BY-ND 3.0 TW）</span></footer>
+  <footer><a id="report" href="https://forms.gle/GBex1gHRLynzHtuT8" target="_blank" rel="noopener">回報問題</a><span>資料來源：教育部教育雲・生字詞彙表；教育部《國語辭典簡編本》（CC BY-ND 3.0 TW）</span></footer>
 </div>
 
 <script>
@@ -446,6 +446,19 @@ document.querySelectorAll(".mode").forEach(b => b.onclick = () => setMode(b.data
 $("all").onclick = () => { lessons.forEach(l => selected.add(l.id)); renderLessons(); update(); };
 $("none").onclick = () => { selected.clear(); renderLessons(); update(); };
 $("regen").onclick = newQuiz;
+
+// 回報問題：開 Google 表單，「回報錯誤內容」預先帶入當時的頁面狀態
+const REPORT_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSc3fcz_REPZeE0hKo-fZY1fxF8f5aru2UA3z1r7nxitS6fK5w/viewform";
+const REPORT_ENTRY = "entry.1285770077";
+$("report").onclick = () => {
+  const chosen = lessons.filter(l => selected.has(l.id)).map(l => splitTitle(l.title).label.replace(/^第|課$/g, ""));
+  const lines = ["（請在這裡寫下哪裡有問題）", "", "---- 當時的頁面（自動帶入）----",
+    `模式：${mode === "list" ? "生字表" : "聽寫出題"}`,
+    `冊別：${vol ? volName(vol) : ""}　課次：${chosen.length ? "第" + chosen.join("、") + "課" : "未選"}`];
+  if (mode === "dictation" && quiz.length) quiz.forEach((it, i) => lines.push(`${i + 1}. ${it.t}（${it.zy.join(" ")}）`));
+  lines.push(`網址：${location.href}`);
+  $("report").href = `${REPORT_FORM}?usp=pp_url&${REPORT_ENTRY}=${encodeURIComponent(lines.join("\n"))}`;
+};
 $("theme").onclick = () => {
   const root = document.documentElement;
   const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
