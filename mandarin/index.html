@@ -492,5 +492,15 @@ Promise.all([LESSONS_URL, POOL_URL].map(u => fetch(u).then(r => r.json()))).then
   setMode(location.hash.slice(1));
 }).catch(() => { $("lede").textContent = "資料載入失敗"; });
 </script>
+<script>
+// Cloudflare Web Analytics：只在正式網站統計，本機預覽不送資料
+if (location.hostname === "tawaki.github.io") {
+  const cf = document.createElement("script");
+  cf.defer = true;
+  cf.src = "https://static.cloudflareinsights.com/beacon.min.js";
+  cf.dataset.cfBeacon = '{"token": "7047d1839c2c48a199a3f4185af66c76"}';
+  document.body.appendChild(cf);
+}
+</script>
 </body>
 </html>
