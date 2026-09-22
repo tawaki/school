@@ -17,6 +17,6 @@
 python3 fetch_vocab.py                                   # 一到六年級各版本生字、語詞 -> vocab_raw.jsonl
 python3 src/xlsx2json.py <dict_concised_*.xlsx> src/concised_rows.json
 python3 src/xlsx2json.py <dict_idioms_*.xlsx> src/idioms_rows.json
-python3 build_dictation.py                               # -> lessons.json, dictation_pool.json
+python3 build_dictation.py                               # -> lessons.json, pool_00.json … pool_11.json（一冊一檔）
 ```
 簡編本、成語典 xlsx 從 <https://language.moe.gov.tw/001/Upload/Files/site_content/M0001/respub/dict_concised_download.html> 下載。

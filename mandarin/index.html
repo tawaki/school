@@ -196,12 +196,12 @@ footer a{color:inherit}
 
 <script>
 const LESSONS_URL = "lessons.json";
-const POOL_URL = "dictation_pool.json";
+const POOL_URL = v => `pool_${String(v).padStart(2, "0")}.json`;
 const STORE_KEY = "hanzi.state";
 const CN = ["", "一", "二", "三", "四", "五", "六"];
 const $ = id => document.getElementById(id);
-let data = null, pool = [];
-let vol = null, lessons = [];
+let data = null, pool = [], poolParts = [], poolLoading = null;
+let vol = null, volIndex = 0, lessons = [];
 let selected = new Set();
 let mode = "list";
 const opts = {n: 10, kind: "mix", grade: 2, sem: "上"};
@@ -232,6 +232,8 @@ function update() { save(); mode === "list" ? renderResult() : newQuiz(); }
 function setVolume(grade, sem, keep) {
   opts.grade = grade; opts.sem = sem;
   vol = data.volumes.find(v => v.grade === grade && v.sem === sem);
+  volIndex = data.volumes.indexOf(vol);
+  loadPool(volIndex);
   lessons = vol.lessons;
   const ids = new Set(lessons.map(l => l.id));
   selected = new Set((keep || []).filter(id => ids.has(id)));
@@ -312,6 +314,19 @@ function renderResult() {
 }
 
 /* ---------- 聽寫出題 ---------- */
+// 題庫照冊分檔，只載入一年級上學期到目前這一冊，載完才組題
+function loadPool(v) {
+  const need = [];
+  for (let i = 0; i <= v; i++) if (!poolParts[i]) need.push(i);
+  if (!need.length) return Promise.resolve();
+  poolLoading = Promise.all(need.map(i =>
+    fetch(POOL_URL(i)).then(r => r.json()).then(d => {
+      poolParts[i] = d.items.map(([t, k, q, zy, lv, g]) =>
+        ({t, k, q, zy: zy.split(" "), lv, g, h: t.replace(/[，。！？、]/g, "")}));
+    })
+  )).then(() => { pool = poolParts.flat(); });  // 超過目前這一冊的題目由 candidates() 依 lv 排除
+  return poolLoading;
+}
 // 可用字 = 一年級上學期起到所選最後一課教過的生字（含一到十、百）；新字 = 所選課的生字
 function scope() {
   const chosen = lessons.filter(l => selected.has(l.id));
@@ -353,6 +368,11 @@ const kindAt = i => opts.kind !== "mix" ? null : ["w", "s", "w", "s", "i"][i % 5
 
 function newQuiz() {
   quiz = []; seen = new Set();
+  if (selected.size && !poolParts[volIndex]) {  // 題庫還沒載完
+    renderQuiz("題庫載入中…");
+    loadPool(volIndex).then(() => { if (selected.size) newQuiz(); });
+    return;
+  }
   if (selected.size) {
     const sc = scope(), cands = candidates(sc);
     for (let i = 0; i < opts.n; i++) {
@@ -383,10 +403,11 @@ function note(ol, text) {
   ol.appendChild(li);
 }
 
-function renderQuiz() {
+function renderQuiz(loading) {
   const ol = $("quiz"), info = $("dinfo");
   ol.innerHTML = ""; info.innerHTML = "";
   if (!selected.size) { note(ol, "請在上面點選課次"); return; }
+  if (loading) { note(ol, loading); return; }
   const sc = scope();
   const covered = new Set(quiz.flatMap(it => [...it.h].filter(c => sc.targets.has(c))));
   const missing = [...sc.targets].filter(c => !covered.has(c));
@@ -476,9 +497,8 @@ $("theme").onclick = () => {
 segment($("seg-n"), "n", [[5, "5"], [10, "10"], [15, "15"], [20, "20"]], v => { opts.n = v; syncSeg($("seg-n"), v); newQuiz(); });
 segment($("seg-kind"), "kind", [["mix", "混合"], ["w", "詞語"], ["s", "短句"], ["i", "成語"]], v => { opts.kind = v; syncSeg($("seg-kind"), v); newQuiz(); });
 
-Promise.all([LESSONS_URL, POOL_URL].map(u => fetch(u).then(r => r.json()))).then(([d, p]) => {
+fetch(LESSONS_URL).then(r => r.json()).then(d => {
   data = d;
-  pool = p.items.map(([t, k, q, zy, lv, g]) => ({t, k, q, zy: zy.split(" "), lv, g, h: t.replace(/[，。！？、]/g, "")}));
   segment($("seg-grade"), "grade", [1, 2, 3, 4, 5, 6].map(g => [g, CN[g]]), g => { setVolume(g, opts.sem); update(); });
   segment($("seg-sem"), "sem", [["上", "上"], ["下", "下"]], s => { setVolume(opts.grade, s); update(); });
   // 網址 ?v=2上&l=1,3 可直接指定年級、學期與課次

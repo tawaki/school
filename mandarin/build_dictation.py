@@ -14,7 +14,7 @@ dictation_pool.json items = [text, kind, quality, 注音, level, grade]
   kind w=詞語 s=短句 i=成語; quality 3 課本語詞 2 課本例句/字典例詞/成語典 1 辭典例句;
   level = global lesson index after which every character is known; grade = textbook grade of the source (0 = 辭典).
 """
-import json, re
+import bisect, json, re
 
 PRESS = "康軒版"
 VOLUMES = [(g, sem, "115_1" if sem == "上" else "114_2") for g in range(1, 7) for sem in ("上", "下")]
@@ -233,7 +233,20 @@ json.dump(char_src, open("char_zhuyin_src.json", "w"), ensure_ascii=False, inden
 SOURCE = "教育部 教育雲 生字詞彙表；教育部《國語辭典簡編本》、《成語典》(CC BY-ND 3.0 TW)"
 json.dump({"source": SOURCE, "press": PRESS, "extra_known": EXTRA_KNOWN, "volumes": volumes,
            "first": first}, open("lessons.json", "w"), ensure_ascii=False, separators=(",", ":"))
-json.dump({"source": SOURCE, "items": pool}, open("dictation_pool.json", "w"), ensure_ascii=False, separators=(",", ":"))
+# 題庫照「最後學到的那一課」分成每冊一檔：二年級只要載入前三檔，不用整包 1.1 MB
+starts = []
+i = 0
+for vol in volumes:
+    starts.append(i)
+    i += len(vol["lessons"])
+chunks = [[] for _ in volumes]
+for item in pool:
+    v = bisect.bisect_right(starts, max(item[4], 0)) - 1
+    chunks[v].append(item)
+for v, part in enumerate(chunks):
+    json.dump({"source": SOURCE, "items": part}, open(f"pool_{v:02d}.json", "w"),
+              ensure_ascii=False, separators=(",", ":"))
+print("pool chunks:", [len(p) for p in chunks])
 print(order, "lessons;", len(first), "chars;", sum(p[1] == "w" for p in pool), "words;",
       sum(p[1] == "i" for p in pool), "idioms;",
       sum(p[1] == "s" for p in pool), "sentences")
