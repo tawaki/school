@@ -1,62 +1,75 @@
 #!/usr/bin/env python3
-"""Build lessons.json + dictation_pool.json for the 國語生字練習 page (康軒版 一到六年級).
+"""Build data/<版本>/lessons.json + data/pool_NN.json for the 國語生字練習 page (康軒、南一、翰林 一到六年級).
 
 Sources
-  vocab_raw.jsonl (fetch_vocab.py): 生字/語詞 of grades 1-6, all presses, years 114_1 114_2 115_1,
+  vocab_raw.jsonl (fetch_vocab.py): 生字/語詞 of grades 1-6, all presses, the last six school years,
       with descriptions ("如：「…」" words, "[例]" sentences).
   src/concised_rows.json (src/xlsx2json.py of 教育部《國語辭典簡編本》): 注音 and "[例]" sentences.
   src/idioms_rows.json (src/xlsx2json.py of 教育部《成語典》): 主條成語, their 注音 and 用法例句.
 
-lessons.json: volumes 一上 … 六下 (康軒, newest year on 教育雲: 上=115_1, 下=114_2), each lesson with 生字 and
-  the 注音 taught in that lesson (best guess, see char_reading), plus first[字] = global lesson index where the
-  character is first taught.
-dictation_pool.json items = [text, kind, quality, 注音, level, grade]
+<版本>/lessons.json: volumes 一上 … 六下, each with editions [{years, lessons}] — school years whose lessons are
+  identical share one edition. Each lesson has 生字 and the 注音 taught in that lesson (best guess, see char_reading).
+  The page picks one edition per volume (the year the child took that grade) and derives the lesson order itself.
+pool_NN.json (shared by all presses and years) items = [text, kind, quality, 注音, grade]
   kind w=詞語 s=短句 i=成語; quality 3 課本語詞 2 課本例句/字典例詞/成語典 1 辭典例句;
-  level = global lesson index after which every character is known; grade = textbook grade of the source (0 = 辭典).
+  grade = textbook grade of the source (0 = 辭典).
+  File NN = the earliest volume at which the item can be fully known under any press/year, so loading files
+  0 … v gives every item the page might use for volume v.
 """
-import bisect, json, re
+import json, os, re
 
-PRESS = "康軒版"
-VOLUMES = [(g, sem, "115_1" if sem == "上" else "114_2") for g in range(1, 7) for sem in ("上", "下")]
+PRESSES = {"kangxuan": "康軒版", "nanyi": "南一版", "hanlin": "翰林版"}  # 資料夾名 -> 教育雲的出版社
+VOLUMES = [(g, sem) for g in range(1, 7) for sem in ("上", "下")]
+SEM_NO = {"上": "1", "下": "2"}
 PUNCT = "，。！？、"
 # 一到十、百：一年級首冊（注音符號）就教，教育雲的課次清單沒有列（2026-09-17 使用者確認算學過）
 EXTRA_KNOWN = "一二三四五六七八九十百"
 
-raw = [json.loads(line) for line in open("vocab_raw.jsonl")]
-
-# ---------- 課次與每個字第一次教的位置 ----------
-volumes, first, order = [], {c: -1 for c in EXTRA_KNOWN}, 0
-for grade, sem, year in VOLUMES:
-    lessons = []
-    for lesson in (l for l in raw if l["press"] == PRESS and l["grade"] == grade and l["year"] == year):
-        rows = lesson["rows"]
-        chars = [w for k, w, _ in rows if k == "生字"]
-        for c in chars:
-            first.setdefault(c, order)
-        lessons.append({"id": lesson["id"], "title": lesson["title"], "i": order, "生字": chars,
-                        "語詞": [w for k, w, _ in rows if k == "語詞"]})
-        order += 1
-    volumes.append({"grade": grade, "sem": sem, "year": year, "lessons": lessons})
+raw = [json.loads(line) for line in open("vocab_raw.jsonl", encoding="utf-8")]
 
 
-def level(text):
-    lv = -1
-    for c in text:
-        if c in PUNCT:
-            continue
-        if c not in first:
-            return None
-        lv = max(lv, first[c])
-    return lv
+def lesson_chars(lesson):
+    # 110_2 的生字表混了語詞（大掃除、棉花糖），只取單字
+    chars = [w for k, w, _ in lesson["rows"] if k == "生字" and len(w) == 1]
+    if not chars:  # 112_1 康軒一上第一課把生字標成「認讀字」，其他年度同一課都是生字
+        chars = [w for k, w, _ in lesson["rows"] if k == "認讀字" and len(w) == 1]
+    return chars
 
 
-# ---------- 候選詞句 ----------
+# ---------- 每冊各學年度的課次；課名與生字都相同的年度合併成一個 edition ----------
+def press_volumes(press):
+    volumes = []
+    for grade, sem in VOLUMES:
+        by_year = {}
+        # 教育雲的課次清單不一定照課序排（111_1 康軒一上第五課排在第四課前面），照 id（結尾是課號）排
+        for lesson in sorted(raw, key=lambda l: l["id"]):
+            if lesson["press"] == press and lesson["grade"] == grade and lesson["year"].endswith("_" + SEM_NO[sem]):
+                by_year.setdefault(lesson["year"], []).append(
+                    {"id": lesson["id"], "title": lesson["title"], "生字": lesson_chars(lesson),
+                     "語詞": [w for k, w, _ in lesson["rows"] if k == "語詞"]})
+        editions = []
+        for year in sorted(by_year):
+            lessons = by_year[year]
+            key = [(l["title"], l["生字"]) for l in lessons]
+            same = next((e for e in editions if e["key"] == key), None)
+            if same:
+                same["years"].append(year)
+                same["lessons"] = lessons  # 用最新一年的資料（語詞可能有更新）
+            else:
+                editions.append({"years": [year], "key": key, "lessons": lessons})
+        volumes.append({"grade": grade, "sem": sem,
+                        "editions": [{"years": e["years"], "lessons": e["lessons"]} for e in editions]})
+    return volumes
+
+
+# ---------- 候選詞句（三個版本共用；只用國小一到六年級教過的字） ----------
+taught = set(EXTRA_KNOWN) | {c for l in raw for c in lesson_chars(l)}
 items = {}  # text -> [kind, quality, grade]
 
 
 def add(text, kind, q, grade):
     text = text.strip()
-    if not text or level(text) is None:
+    if not text or any(c not in taught for c in text if c not in PUNCT):
         return
     old = items.get(text)
     if old is None or (q, -grade) > (old[1], -old[2]):
@@ -97,7 +110,7 @@ for lesson in raw:
         for s in sentences(desc):
             add(s, "s", 2, g)
 
-concised = json.load(open("src/concised_rows.json"))[1:]
+concised = json.load(open("src/concised_rows.json", encoding="utf-8"))[1:]
 
 # ---------- 成語：教育部《成語典》主條成語，注音直接用成語典 ----------
 textbook_words = {}
@@ -106,7 +119,7 @@ for lesson in raw:
         if kind == "語詞":
             textbook_words.setdefault(word, lesson["grade"])
 idiom_zy = {}
-for row in json.load(open("src/idioms_rows.json"))[1:]:
+for row in json.load(open("src/idioms_rows.json", encoding="utf-8"))[1:]:
     word = row[1].strip()
     if len(row) < 22 or row[21] != "主條成語" or len(word) < 4:
         continue
@@ -179,11 +192,7 @@ def zhuyin(text):
     return " ".join(out)
 
 
-pool = []
-for t, (k, q, g) in sorted(items.items(), key=lambda x: (level(x[0]), x[1][0], -x[1][1], x[0])):
-    zy = idiom_zy.get(t) or zhuyin(t)
-    if zy:
-        pool.append([t, k, q, zy, level(t), g])
+item_zy = {t: idiom_zy.get(t) or zhuyin(t) for t in items}
 
 # ---------- 生字表的注音：盡量取「這一課教的讀音」 ----------
 # 課本原文沒有公開資料，依序用：本課語詞 → 課名 → 虛詞常用讀音 → 字典釋義第一個例詞 → 辭典單字第一讀音。
@@ -221,32 +230,51 @@ def char_reading(ch, lesson):
     return (readings[ch][1][0] if ch in readings else ""), "單字第一讀音"
 
 
-char_src = {}
-for vol in volumes:
-    for lesson in vol["lessons"]:
-        got = [char_reading(ch, lesson) for ch in lesson["生字"]]
-        lesson["注音"] = [r for r, _ in got]
-        char_src[lesson["title"] + " " + lesson["id"]] = {ch: src for ch, (_, src) in zip(lesson["生字"], got)}
-        del lesson["語詞"]
-json.dump(char_src, open("char_zhuyin_src.json", "w"), ensure_ascii=False, indent=1)
-
 SOURCE = "教育部 教育雲 生字詞彙表；教育部《國語辭典簡編本》、《成語典》(CC BY-ND 3.0 TW)"
-json.dump({"source": SOURCE, "press": PRESS, "extra_known": EXTRA_KNOWN, "volumes": volumes,
-           "first": first}, open("lessons.json", "w"), ensure_ascii=False, separators=(",", ":"))
-# 題庫照「最後學到的那一課」分成每冊一檔：二年級只要載入前三檔，不用整包 1.1 MB
-starts = []
-i = 0
-for vol in volumes:
-    starts.append(i)
-    i += len(vol["lessons"])
-chunks = [[] for _ in volumes]
-for item in pool:
-    v = bisect.bisect_right(starts, max(item[4], 0)) - 1
-    chunks[v].append(item)
+
+
+def write_json(path, obj, **kw):
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(obj, f, ensure_ascii=False, **kw)
+
+
+all_volumes = {key: press_volumes(press) for key, press in PRESSES.items()}
+
+# 每個字最早可能在第幾冊教到（所有版本、年度取最早）：題目分檔的依據
+min_vol = {c: 0 for c in EXTRA_KNOWN}
+for volumes in all_volumes.values():
+    for v, vol in enumerate(volumes):
+        for e in vol["editions"]:
+            for lesson in e["lessons"]:
+                for c in lesson["生字"]:
+                    min_vol[c] = min(min_vol.get(c, v), v)
+
+for key, press in PRESSES.items():
+    volumes = all_volumes[key]
+    out = os.path.join("data", key)
+    os.makedirs(out, exist_ok=True)
+    char_src = {}
+    for vol in volumes:
+        for e in vol["editions"]:
+            for lesson in e["lessons"]:
+                got = [char_reading(ch, lesson) for ch in lesson["生字"]]
+                lesson["注音"] = [r for r, _ in got]
+                char_src[lesson["title"] + " " + lesson["id"]] = {ch: src for ch, (_, src) in zip(lesson["生字"], got)}
+                del lesson["語詞"]
+    write_json(os.path.join(out, "char_zhuyin_src.json"), char_src, indent=1)
+    write_json(os.path.join(out, "lessons.json"),
+               {"source": SOURCE, "press": press, "extra_known": EXTRA_KNOWN, "volumes": volumes},
+               separators=(",", ":"))
+    print(press, "editions per volume:", [len(v["editions"]) for v in volumes])
+
+# ---------- 題庫：各版本、年度共用，照「最早可能全部學會的那一冊」分檔 ----------
+chunks = [[] for _ in VOLUMES]
+for t, (k, q, g) in sorted(items.items(), key=lambda x: (x[1][0], -x[1][1], x[0])):
+    if item_zy[t]:
+        chunks[max(min_vol[c] for c in t if c not in PUNCT)].append([t, k, q, item_zy[t], g])
 for v, part in enumerate(chunks):
-    json.dump({"source": SOURCE, "items": part}, open(f"pool_{v:02d}.json", "w"),
-              ensure_ascii=False, separators=(",", ":"))
+    write_json(os.path.join("data", f"pool_{v:02d}.json"), {"source": SOURCE, "items": part}, separators=(",", ":"))
+pool = [it for part in chunks for it in part]
 print("pool chunks:", [len(p) for p in chunks])
-print(order, "lessons;", len(first), "chars;", sum(p[1] == "w" for p in pool), "words;",
-      sum(p[1] == "i" for p in pool), "idioms;",
-      sum(p[1] == "s" for p in pool), "sentences")
+print(len(min_vol), "chars;", sum(p[1] == "w" for p in pool), "words;",
+      sum(p[1] == "i" for p in pool), "idioms;", sum(p[1] == "s" for p in pool), "sentences")
