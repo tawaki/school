@@ -1,0 +1,556 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>數學口算抽考</title>
+<meta name="description" content="康軒、南一、翰林版國小一到六年級數學：選版本、學期和單元，家長念題、孩子口頭回答；看圖題讓孩子看螢幕。自動記下常錯題。">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ground:#f6f3ec;
+  --panel:#fffdf8;
+  --ink:#22201c;
+  --dim:#6b665c;
+  --line:#e2dccf;
+  --tile:#ffffff;
+  --accent:#2f6a95;
+  --accent-soft:#dde9f2;
+  --ok:#2e7d4f;
+  --bad:#c2462e;
+  --bad-soft:#f7e3dc;
+  --look:#8a5a00;
+  --look-soft:#f6ead0;
+  --on-accent:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#15130f;
+    --panel:#1e1b16;
+    --ink:#efe9de;
+    --dim:#a39c8f;
+    --line:#353027;
+    --tile:#110f0c;
+    --accent:#7fb3d9;
+    --accent-soft:#1c2c38;
+    --ok:#62b884;
+    --bad:#f08a6e;
+    --bad-soft:#3a2219;
+    --look:#e6b85c;
+    --look-soft:#3a2e14;
+    --on-accent:#15130f;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#15130f;
+  --panel:#1e1b16;
+  --ink:#efe9de;
+  --dim:#a39c8f;
+  --line:#353027;
+  --tile:#110f0c;
+  --accent:#7fb3d9;
+  --accent-soft:#1c2c38;
+  --ok:#62b884;
+  --bad:#f08a6e;
+  --bad-soft:#3a2219;
+  --look:#e6b85c;
+  --look-soft:#3a2e14;
+  --on-accent:#15130f;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);margin:0;font:16px/1.6 "Noto Sans TC",system-ui,sans-serif;padding:0 16px}
+.wrap{max-width:980px;margin:0 auto;padding-block:32px 48px;display:grid;gap:20px}
+h1,h2{margin:0;text-wrap:balance}
+h1{font-size:30px;font-weight:700;line-height:1.25}
+h2{font-size:18px;font-weight:700}
+p{margin:0}
+[hidden]{display:none!important}
+.lede{color:var(--dim)}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{height:76px;width:auto;flex:none}
+.brand-text{flex:1;min-width:0;display:grid;gap:2px}
+.brand .theme{align-self:flex-start}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.theme{background:none;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;color:var(--dim)}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px}
+.boxhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.small{background:none;border:1px solid var(--line);border-radius:8px;padding:4px 12px;font-size:14px;color:var(--dim)}
+.small:hover{color:var(--ink);border-color:var(--ink)}
+.small:disabled{opacity:.4;cursor:default}
+.primary{background:var(--accent);border:1px solid var(--accent);color:var(--on-accent);border-radius:8px;padding:6px 16px;font-weight:500}
+.primary:disabled{opacity:.4;cursor:default}
+.big{font-size:18px;padding:10px 28px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+.ctl{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:var(--tile);border:0;padding:4px 12px;font-size:14px}
+.seg button + button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.units{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.unit{display:flex;align-items:center;gap:10px;text-align:left;background:var(--tile);border:2px solid var(--line);border-radius:10px;padding:10px 12px;min-height:60px;transition:border-color .15s,background .15s}
+.unit:hover:not(:disabled){border-color:var(--accent)}
+.unit[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.unit:disabled{cursor:default;opacity:.55;border-style:dashed}
+.num{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;border:2px solid var(--line);color:var(--dim)}
+.unit[aria-pressed="true"] .num{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.uname{display:grid;gap:3px;font-size:15px;line-height:1.35}
+.tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:11px;line-height:1.5;border-radius:999px;padding:0 7px;border:1px solid var(--line);color:var(--dim)}
+.tag.look{border-color:var(--look);color:var(--look)}
+.picked{color:var(--dim);font-size:14px;display:grid;gap:6px}
+.picked b{color:var(--accent)}
+.skills{display:flex;flex-wrap:wrap;gap:6px}
+.skill{font-size:13px;border-radius:6px;padding:1px 8px;background:var(--tile);border:1px solid var(--line);color:var(--ink)}
+.skill.look{border-color:var(--look);background:var(--look-soft)}
+.how{color:var(--dim);font-size:14px}
+.how b{color:var(--ink);font-weight:500}
+.wrongs{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--tile);border:1px solid var(--line);border-radius:8px;padding:2px 10px;font-size:15px}
+.chip .x{color:var(--bad);font-size:12px}
+.chip .eq{color:var(--dim)}
+/* 抽考畫面 */
+.card{gap:16px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--dim);font-size:14px}
+.progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);transition:width .2s}
+.qtopic{color:var(--dim);font-size:14px;text-align:center}
+.lookbanner{justify-self:center;background:var(--look-soft);color:var(--look);border:1px solid var(--look);border-radius:999px;padding:2px 14px;font-size:14px;font-weight:700}
+.figbox{display:grid;place-items:center;overflow-x:auto}
+.fig{max-width:100%;height:auto;color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif}
+.q{font-size:52px;font-weight:500;line-height:1.3;text-align:center;font-variant-numeric:tabular-nums;min-height:1.4em;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 .25em}
+.q.long{font-size:24px;line-height:1.6;text-wrap:balance}
+.ans{display:grid;justify-items:center;gap:2px;padding:12px;border-radius:10px;background:var(--accent-soft)}
+.ans small{color:var(--dim);font-size:13px}
+.ans .aval{font-size:32px;font-weight:700;color:var(--accent);line-height:1.35;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 .25em;text-align:center}
+.ans .aval.long{font-size:22px}
+.ans.covered{cursor:pointer}
+.ans.covered .aval{filter:blur(14px);user-select:none}
+.judge{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.judge button{border:0;border-radius:12px;padding:18px 0;font-size:22px;font-weight:700;color:var(--on-accent)}
+.judge .no{background:var(--bad)}
+.judge .yes{background:var(--ok)}
+.sub{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+/* 分數 */
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;font-size:.62em;line-height:1.15;margin:0 .08em}
+.frac > span:first-child{border-bottom:.08em solid currentColor;padding:0 .2em}
+.ans .frac,.rq .frac,.chip .frac,.q.long .frac{font-size:.8em}
+/* 結果 */
+.score{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 20px}
+.score b{font-size:40px;color:var(--accent);line-height:1.1}
+.score span{color:var(--dim)}
+.rlist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rlist li{display:flex;align-items:center;gap:12px;background:var(--tile);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.rlist li.bad{border-color:var(--bad);background:var(--bad-soft)}
+.mark{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:700;color:var(--on-accent);background:var(--ok)}
+.bad .mark{background:var(--bad)}
+.rq{flex:1;font-size:18px;display:flex;flex-wrap:wrap;align-items:center;gap:0 .3em}
+.rq .eq{color:var(--dim)}
+.rq .ra{color:var(--accent);font-weight:700}
+.rq .look{font-size:12px;color:var(--look);border:1px solid var(--look);border-radius:999px;padding:0 6px}
+.secs{flex:none;color:var(--dim);font-size:13px;font-variant-numeric:tabular-nums}
+.secs.slow{color:var(--bad)}
+footer{color:var(--dim);font-size:13px;display:flex;flex-wrap:wrap;gap:6px 16px}
+footer a{color:inherit}
+@media (max-width:480px){
+  h1{font-size:25px}
+  .logo{height:60px}
+  .brand{gap:10px}
+  .units{grid-template-columns:1fr 1fr}
+  .unit{padding:8px;gap:8px}
+  .num{width:28px;height:28px;font-size:13px}
+  .uname{font-size:14px}
+  .q{font-size:42px}
+  .q.long{font-size:21px}
+  .ans .aval{font-size:26px}
+  .rq{font-size:16px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand">
+    <img class="logo" src="logo.png" alt="" width="214" height="281">
+    <div class="brand-text">
+      <h1>數學口算抽考</h1>
+      <p class="lede" id="lede">載入中…</p>
+    </div>
+    <button class="theme" id="theme" type="button">深色／淺色</button>
+  </header>
+
+  <!-- 設定 -->
+  <section class="box" id="setup">
+    <div class="controls">
+      <div class="ctl">版本 <span class="seg" id="seg-press"></span></div>
+      <div class="ctl">年級 <span class="seg" id="seg-grade"></span></div>
+      <div class="ctl">學期 <span class="seg" id="seg-sem"></span></div>
+    </div>
+    <div class="boxhead">
+      <h2>選擇單元（可多選）</h2>
+      <div class="actions">
+        <button class="small" id="all" type="button">全選</button>
+        <button class="small" id="none" type="button">清除</button>
+      </div>
+    </div>
+    <div class="units" id="units"></div>
+    <div class="picked" id="picked"></div>
+    <div class="controls">
+      <div class="ctl">題數 <span class="seg" id="seg-n"></span></div>
+      <div class="ctl">口說題的答案 <span class="seg" id="seg-cover"></span></div>
+    </div>
+    <div><button class="primary big" id="start" type="button">開始抽考</button></div>
+    <p class="how"><b>口說題</b>：家長念題目，孩子用心算回答。<b>看圖題</b>（時鐘、錢幣、圖形、統計圖…）要讓孩子看螢幕，答案會先蓋住，家長點一下才顯示。答錯的題目會記在這台裝置上（常錯題），之後答對會慢慢移除。</p>
+  </section>
+
+  <section class="box" id="wrongbox" hidden>
+    <div class="boxhead">
+      <h2>常錯題</h2>
+      <div class="actions">
+        <button class="primary" id="drill" type="button">練常錯題</button>
+        <button class="small" id="forget" type="button">清除紀錄</button>
+      </div>
+    </div>
+    <div class="wrongs" id="wrongs"></div>
+  </section>
+
+  <!-- 抽考 -->
+  <section class="box card" id="quiz" hidden>
+    <div class="bar"><span id="count"></span><span id="clock">0 秒</span><button class="small" id="stop" type="button">結束</button></div>
+    <div class="progress"><span id="prog"></span></div>
+    <p class="qtopic" id="qtopic"></p>
+    <p class="lookbanner" id="lookbanner" hidden>看圖題：請孩子看螢幕</p>
+    <div class="figbox" id="fig" hidden></div>
+    <div class="q" id="qtext"></div>
+    <div class="ans" id="ans"><small id="anshint">答案</small><div class="aval" id="aval"></div></div>
+    <div class="judge">
+      <button class="no" id="no" type="button">答錯</button>
+      <button class="yes" id="yes" type="button">答對</button>
+    </div>
+    <div class="sub">
+      <button class="small" id="undo" type="button">回上一題重新判定</button>
+      <button class="small" id="skip" type="button">這題不算，換一題</button>
+    </div>
+  </section>
+
+  <!-- 結果 -->
+  <section class="box" id="result" hidden>
+    <div class="score" id="score"></div>
+    <div class="actions">
+      <button class="primary" id="again-wrong" type="button">錯的再練一次</button>
+      <button class="primary" id="again" type="button">同樣單元再一組</button>
+      <button class="small" id="back" type="button">回到設定</button>
+    </div>
+    <ol class="rlist" id="rlist"></ol>
+    <p class="how" id="slowhint"></p>
+  </section>
+
+  <footer>
+    <a id="report" href="https://forms.gle/GBex1gHRLynzHtuT8" target="_blank" rel="noopener">回報問題</a>
+    <a href="../mandarin/">國語生字練習</a>
+    <span>單元目錄依均一教育平台「類康軒／類南一／類翰林版」整理，可能和最新版課本略有不同</span>
+  </footer>
+</div>
+
+<script src="skills.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const CN = ["", "一", "二", "三", "四", "五", "六"];
+const PRESSES = [["kangxuan", "康軒"], ["nanyi", "南一"], ["hanlin", "翰林"]];
+const STORE_KEY = "math.state", WRONG_KEY = "math.wrong", WRONG_MAX = 200;
+const opts = {press: "kangxuan", grade: 2, sem: "上", n: 10, cover: false};
+let data = null, vol = null, selected = new Set();
+let items = [], at = 0, log = [], started = 0, shownAt = 0, tick = null, lastPlan = null, drillMode = false, wake = null;
+let wrong = {};  // key -> {q, a, fig, label, n}：n 是還要答對幾次才移除
+
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({...opts, units: [...selected]})); } catch (e) {} }
+function saveWrong() { try { localStorage.setItem(WRONG_KEY, JSON.stringify(wrong)); } catch (e) {} }
+function loadJSON(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }
+const volName = () => `${CN[opts.grade]}年級${opts.sem}學期`;
+const plain = h => { const d = document.createElement("div"); d.innerHTML = h.replace(/<span class="frac"><span>(.*?)<\/span><span>(.*?)<\/span><\/span>/g, "($1/$2)"); return d.textContent; };
+// 題目和答案接在一起顯示：題目裡已經有 = 或問號就用箭頭
+const qa = (q, a, cls = "") => `${q} <span class="eq">${/[=？]/.test(plain(q)) ? "→" : "="}</span> <span class="${cls}">${a}</span>`;
+
+/* ---------- 設定畫面 ---------- */
+// 分段按鈕：isOn 收到的是按鈕上的字串值
+function segment(el, choices, isOn, onPick) {
+  el.innerHTML = "";
+  for (const [val, label] of choices) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = label; b.dataset.val = String(val);
+    b.onclick = () => { onPick(val); syncSegs(); };
+    el.appendChild(b);
+  }
+  el._isOn = isOn;
+}
+function syncSegs() {
+  document.querySelectorAll(".seg").forEach(el => { if (el._isOn) [...el.children].forEach(b => b.setAttribute("aria-pressed", el._isOn(b.dataset.val))); });
+}
+
+function setVolume(keep) {
+  vol = data.presses[opts.press].volumes.find(v => v.grade === opts.grade && v.sem === opts.sem);
+  const ok = new Set(vol.units.filter(u => u.skills.length).map(u => u.n));
+  selected = new Set((keep || []).filter(n => ok.has(n)));
+  $("lede").textContent = `${data.presses[opts.press].name}・${volName()}`;
+  renderUnits(); save();
+}
+
+function kinds(u) {
+  const vis = u.skills.map(r => SKILLS[r.split(":")[0]].visual);
+  return {oral: vis.includes(false), look: vis.includes(true)};
+}
+
+function renderUnits() {
+  const box = $("units");
+  box.innerHTML = "";
+  for (const u of vol.units) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "unit";
+    b.title = u.sections.join("\n");
+    const {oral, look} = kinds(u);
+    b.disabled = !u.skills.length;
+    b.setAttribute("aria-pressed", selected.has(u.n));
+    b.innerHTML = `<span class="num">${u.n}</span><span class="uname"><span class="ut"></span><span class="tags">${
+      !u.skills.length ? '<span class="tag">要動手操作，不出題</span>' : (oral ? '<span class="tag">口說</span>' : "") + (look ? '<span class="tag look">看圖</span>' : "")}</span></span>`;
+    b.querySelector(".ut").textContent = u.title;
+    b.onclick = () => {
+      selected.has(u.n) ? selected.delete(u.n) : selected.add(u.n);
+      b.setAttribute("aria-pressed", selected.has(u.n));
+      renderPicked(); save();
+    };
+    box.appendChild(b);
+  }
+  renderPicked();
+}
+
+function chosenUnits() { return vol.units.filter(u => selected.has(u.n) && u.skills.length); }
+
+function renderPicked() {
+  const us = chosenUnits(), box = $("picked");
+  box.innerHTML = "";
+  $("start").disabled = !us.length;
+  if (!us.length) { box.textContent = "點選上面的單元（可以選好幾個一起複習）"; return; }
+  const seen = new Map();
+  for (const u of us) for (const r of u.skills) { const l = skillLabel(r); if (!seen.has(l)) seen.set(l, SKILLS[r.split(":")[0]].visual); }
+  const head = document.createElement("span");
+  head.innerHTML = `已選 <b>${us.length}</b> 個單元，會出這些題型：`;
+  const list = document.createElement("div");
+  list.className = "skills";
+  for (const [l, v] of seen) { const s = document.createElement("span"); s.className = "skill" + (v ? " look" : ""); s.textContent = l; list.appendChild(s); }
+  box.append(head, list);
+}
+
+function renderWrong() {
+  const list = Object.values(wrong);
+  $("wrongbox").hidden = !list.length;
+  const box = $("wrongs");
+  box.innerHTML = "";
+  list.sort((a, b) => b.n - a.n).slice(0, 60).forEach(w => {
+    const c = document.createElement("span");
+    c.className = "chip";
+    c.innerHTML = (w.fig ? '<span class="x">看圖</span> ' : "") + qa(w.q, w.a) + (w.n > 1 ? ` <span class="x">×${w.n}</span>` : "");
+    box.appendChild(c);
+  });
+  $("drill").textContent = `練常錯題（${list.length} 題）`;
+}
+
+/* ---------- 抽考 ---------- */
+// 每題先隨機挑一個單元，再從這個單元的題型裡挑一種；同一組不重複，題目不夠時只避開上一題
+function makeSet(plan, n) {
+  const out = [], seen = new Set();
+  for (let i = 0; i < n; i++) {
+    let it = null;
+    for (let tries = 0; tries < 60; tries++) {
+      const u = pick(plan), ref = pick(u.skills), g = makeItem(ref);
+      const prev = out[out.length - 1];
+      if (!seen.has(g.key) || (tries > 40 && (!prev || prev.key !== g.key))) { it = {...g, label: `${u.label}・${skillLabel(ref)}`}; break; }
+    }
+    if (!it) break;
+    seen.add(it.key); out.push(it);
+  }
+  return out;
+}
+
+function planFromSelection() {
+  const pv = `${data.presses[opts.press].name} ${opts.grade}${opts.sem}`;
+  return chosenUnits().map(u => ({skills: u.skills, label: `${pv} 第 ${u.n} 單元 ${u.title}`}));
+}
+
+function begin(set) {
+  if (!set.length) return;
+  items = set; at = 0; log = [];
+  $("setup").hidden = $("wrongbox").hidden = $("result").hidden = true;
+  $("quiz").hidden = false;
+  started = Date.now();
+  clearInterval(tick);
+  $("clock").textContent = "0 秒";
+  tick = setInterval(() => { $("clock").textContent = `${Math.round((Date.now() - started) / 1000)} 秒`; }, 1000);
+  try { navigator.wakeLock?.request("screen").then(w => { wake = w; }).catch(() => {}); } catch (e) {}  // 抽考時螢幕不要自動變暗
+  show();
+  window.scrollTo(0, 0);
+}
+
+function show() {
+  const it = items[at];
+  $("count").textContent = `第 ${at + 1} / ${items.length} 題`;
+  $("prog").style.width = `${at / items.length * 100}%`;
+  $("qtopic").textContent = it.label || "";
+  $("lookbanner").hidden = !it.fig;
+  $("fig").hidden = !it.fig;
+  $("fig").innerHTML = it.fig || "";
+  $("qtext").innerHTML = it.q;
+  $("qtext").className = "q" + (plain(it.q).length > 14 || it.fig ? " long" : "");
+  $("aval").innerHTML = it.a;
+  $("aval").className = "aval" + (plain(it.a).length > 12 ? " long" : "");
+  setCover(it.fig ? true : opts.cover);  // 看圖題孩子會看到螢幕，答案一定先蓋住
+  $("undo").disabled = !log.length;
+  shownAt = Date.now();
+}
+
+function setCover(on) {
+  $("ans").classList.toggle("covered", on);
+  $("anshint").textContent = on ? "答案（家長點一下顯示）" : "答案";
+}
+
+// 常錯題：答錯 +1（最多 3），答對 −1，到 0 就移除。記下變動前的樣子，回上一題時還原
+function judge(ok) {
+  const it = items[at];
+  const before = wrong[it.key] ? {...wrong[it.key]} : null;
+  if (!ok) {
+    wrong[it.key] = {q: it.q, a: it.a, fig: it.fig, label: it.label, n: Math.min(3, (before?.n || 0) + 1)};
+    const keys = Object.keys(wrong);
+    if (keys.length > WRONG_MAX) delete wrong[keys[0]];
+  } else if (before) { if (before.n <= 1) delete wrong[it.key]; else wrong[it.key].n--; }
+  saveWrong();
+  log.push({it, ok, ms: Date.now() - shownAt, before});
+  at++;
+  at < items.length ? show() : finish();
+}
+
+function undo() {
+  const last = log.pop();
+  if (!last) return;
+  if (last.before) wrong[last.it.key] = last.before; else delete wrong[last.it.key];
+  saveWrong();
+  at--; show();
+}
+
+function skip() {
+  if (lastPlan && !drillMode) { const [n] = makeSet(lastPlan, 1); if (n) items[at] = n; }
+  else items.splice(at, 1);  // 常錯題沒有新題可換，就直接略過
+  at < items.length ? show() : finish();
+}
+
+function finish() {
+  clearInterval(tick);
+  try { wake?.release(); } catch (e) {}
+  wake = null;
+  $("quiz").hidden = true;
+  $("result").hidden = false;
+  const ok = log.filter(x => x.ok).length, total = log.length;
+  const secs = Math.round((Date.now() - started) / 1000);
+  const mean = total ? log.reduce((s, x) => s + x.ms, 0) / total : 0;
+  $("score").innerHTML = total
+    ? `<b>${ok} / ${total}</b><span>答對率 ${Math.round(ok / total * 100)}%</span><span>總共 ${secs} 秒，平均每題 ${(mean / 1000).toFixed(1)} 秒</span>`
+    : `<b>0 題</b><span>還沒有作答</span>`;
+  // 花的時間超過平均兩倍（且超過 5 秒）的題目標紅：答對了但還不熟
+  const ol = $("rlist");
+  ol.innerHTML = "";
+  let slow = 0;
+  for (const x of [...log.filter(x => !x.ok), ...log.filter(x => x.ok)]) {
+    const li = document.createElement("li");
+    li.className = x.ok ? "" : "bad";
+    const isSlow = x.ok && x.ms > Math.max(5000, mean * 2);
+    if (isSlow) slow++;
+    li.innerHTML = `<span class="mark">${x.ok ? "✓" : "✗"}</span><span class="rq">${x.it.fig ? '<span class="look">看圖</span>' : ""}${qa(x.it.q, x.it.a, "ra")}</span>` +
+      `<span class="secs${isSlow ? " slow" : ""}">${(x.ms / 1000).toFixed(1)} 秒</span>`;
+    ol.appendChild(li);
+  }
+  $("slowhint").textContent = slow ? "紅色秒數：答對了但想比較久（超過平均的兩倍），可以多練幾次。" : "";
+  $("again-wrong").hidden = !log.some(x => !x.ok);
+  $("again").textContent = drillMode ? "再練一次常錯題" : "同樣單元再一組";
+  $("again").hidden = drillMode && !Object.keys(wrong).length;  // 常錯題都練掉了
+  window.scrollTo(0, 0);
+}
+
+function toSetup() {
+  $("result").hidden = $("quiz").hidden = true;
+  $("setup").hidden = false;
+  renderWrong(); renderPicked();
+}
+
+function startDrill() {
+  drillMode = true;
+  begin(shuffle(Object.entries(wrong).map(([key, w]) => ({...w, key}))).slice(0, 30));
+}
+
+/* ---------- 事件 ---------- */
+$("all").onclick = () => { vol.units.forEach(u => u.skills.length && selected.add(u.n)); renderUnits(); save(); };
+$("none").onclick = () => { selected.clear(); renderUnits(); save(); };
+$("start").onclick = () => { drillMode = false; lastPlan = planFromSelection(); begin(makeSet(lastPlan, opts.n)); };
+$("drill").onclick = startDrill;
+$("forget").onclick = () => { if (confirm("確定要清除這台裝置上所有的常錯題紀錄？")) { wrong = {}; saveWrong(); renderWrong(); } };
+$("yes").onclick = () => judge(true);
+$("no").onclick = () => judge(false);
+$("undo").onclick = undo;
+$("skip").onclick = skip;
+$("stop").onclick = finish;
+$("ans").onclick = () => { if ($("ans").classList.contains("covered")) setCover(false); };
+$("again-wrong").onclick = () => begin(shuffle(log.filter(x => !x.ok).map(x => x.it)));
+$("again").onclick = () => drillMode ? startDrill() : begin(makeSet(lastPlan, items.length || opts.n));
+$("back").onclick = toSetup;
+$("theme").onclick = () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+};
+// 回報問題：和國語共用同一份表單，預先帶入目前的單元和題目
+const REPORT_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSc3fcz_REPZeE0hKo-fZY1fxF8f5aru2UA3z1r7nxitS6fK5w/viewform";
+const REPORT_ENTRY = "entry.1285770077";
+$("report").onclick = () => {
+  const lines = ["（請在這裡寫下哪裡有問題）", "", "---- 當時的頁面（自動帶入）----", "工具：數學口算抽考",
+    `冊別：${data ? data.presses[opts.press].name : ""}${volName()}　單元：${[...selected].sort((a, b) => a - b).join("、") || "未選"}`];
+  if (!$("quiz").hidden && items[at]) lines.push(`目前題目：${items[at].label}｜${plain(items[at].q)} = ${plain(items[at].a)}`);
+  lines.push(`網址：${location.href}`);
+  $("report").href = `${REPORT_FORM}?usp=pp_url&${REPORT_ENTRY}=${encodeURIComponent(lines.join("\n"))}`;
+};
+
+// 網址 ?p=南一&v=2上&u=7,9 可直接指定版本、年級、學期與單元
+fetch("units.json").then(r => r.json()).then(d => {
+  data = d;
+  wrong = loadJSON(WRONG_KEY) || {};
+  const st = loadJSON(STORE_KEY) || {};
+  for (const k of ["press", "grade", "sem", "n", "cover"]) if (st[k] !== undefined) opts[k] = st[k];
+  const q = new URLSearchParams(location.search);
+  const qp = PRESSES.find(([k, name]) => q.get("p") === k || (q.get("p") || "").startsWith(name));
+  if (qp) opts.press = qp[0];
+  if (!data.presses[opts.press]) opts.press = "kangxuan";
+  const vm = (q.get("v") || "").match(/^([1-6])([上下])$/);
+  if (vm) { opts.grade = +vm[1]; opts.sem = vm[2]; }
+  const keep = q.get("u") ? q.get("u").split(",").map(Number) : (st.units || []);
+  segment($("seg-press"), PRESSES, v => v === opts.press, v => { if (v !== opts.press) { opts.press = v; setVolume([]); } });
+  segment($("seg-grade"), [1, 2, 3, 4, 5, 6].map(g => [g, CN[g]]), v => +v === opts.grade, v => { opts.grade = v; setVolume([]); });
+  segment($("seg-sem"), [["上", "上"], ["下", "下"]], v => v === opts.sem, v => { opts.sem = v; setVolume([]); });
+  segment($("seg-n"), [[10, "10"], [20, "20"], [30, "30"]], v => +v === opts.n, v => { opts.n = v; save(); });
+  segment($("seg-cover"), [[false, "直接顯示"], [true, "先蓋住"]], v => v === String(opts.cover), v => { opts.cover = v; save(); });
+  syncSegs();
+  setVolume(keep);
+  renderWrong();
+}).catch(() => { $("lede").textContent = "資料載入失敗，請重新整理"; });
+</script>
+<script>
+// Cloudflare Web Analytics：只在正式網站統計，本機預覽不送資料
+if (location.hostname === "tawaki.github.io") {
+  const cf = document.createElement("script");
+  cf.defer = true;
+  cf.src = "https://static.cloudflareinsights.com/beacon.min.js";
+  cf.dataset.cfBeacon = '{"token": "7047d1839c2c48a199a3f4185af66c76"}';
+  document.body.appendChild(cf);
+}
+</script>
+</body>
+</html>
